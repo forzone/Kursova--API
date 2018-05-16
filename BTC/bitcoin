@@ -1,0 +1,25 @@
+#!/bin/bash
+curl -o json 'https://api.coinmarketcap.com/v2/ticker/1/'
+curr=$(< json jq '.data.quotes.USD.price')
+change=$(< json jq '.data.quotes.USD.percent_change_1h')
+#curr=${curr:1:-1}
+
+file="btc.data"
+[ -s $file ] && prev=$(cat $file) || prev=0
+
+d=$(echo "scale=2; ($curr - $prev) / 1" | bc )
+cents=$( echo "scale=0; ($d * 100) / 1" | bc )
+if [ $cents -ne 0 ]
+then
+
+ApiToken='559203720:AAG8b15iiJtRpxJHOmGoiM8xhpxrS2IAdAQ'
+chatId="271781270"
+
+curl -s -X POST https://api.telegram.org/bot${ApiToken}/sendMessage -d text="*Bitcoin price*: $curr $ %0A*Difference*: $d $ %0A*Change in last 1h*: $change %" -d chat_id="$chatId" -d parse_mode="Markdown" &>>/dev/null
+
+
+
+echo "$curr ($d)"
+echo $curr > $file
+fi
+
